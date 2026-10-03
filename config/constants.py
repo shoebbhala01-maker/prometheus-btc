@@ -1,0 +1,65 @@
+"""
+PROMETHEUS BTC TERMINAL: Global Constants & Enums
+Defines authoritative states for Market Regime, Breakouts, Spikes, Signals, and Data Health.
+"""
+
+from enum import Enum
+
+
+class MarketRegime(str, Enum):
+    TREND_UP = "TREND_UP"
+    TREND_DOWN = "TREND_DOWN"
+    RANGE = "RANGE"
+    HIGH_VOLATILITY = "HIGH_VOLATILITY"
+    TRANSITION = "TRANSITION"
+    INSUFFICIENT_DATA = "INSUFFICIENT_DATA"
+
+
+class BreakoutStage(str, Enum):
+    RANGE_IDENTIFIED = "RANGE_IDENTIFIED"
+    LEVEL_APPROACHING = "LEVEL_APPROACHING"
+    BREAKOUT_ATTEMPT = "BREAKOUT_ATTEMPT"
+    BREAKOUT_CANDLE_CLOSED = "BREAKOUT_CANDLE_CLOSED"
+    CONFIRMATION_PENDING = "CONFIRMATION_PENDING"
+    RETEST_OR_ACCEPTANCE = "RETEST_OR_ACCEPTANCE"
+    CONFIRMED = "CONFIRMED"
+    FAILED_BREAKOUT = "FAILED_BREAKOUT"
+    INVALIDATED = "INVALIDATED"
+
+
+class SpikeState(str, Enum):
+    NORMAL = "NORMAL"
+    MOVE_ACCELERATING = "MOVE_ACCELERATING"
+    SPIKE_DETECTED = "SPIKE_DETECTED"
+    EXHAUSTION_RISK = "EXHAUSTION_RISK"
+    REVERSAL_RISK = "REVERSAL_RISK"
+    REVERSAL_CONFIRMED = "REVERSAL_CONFIRMED"
+    RESET = "RESET"
+
+
+class DecisionState(str, Enum):
+    LONG_SETUP = "LONG SETUP"
+    SHORT_SETUP = "SHORT SETUP"
+    WAIT = "WAIT"
+    NO_TRADE = "NO TRADE"
+    DATA_INVALID = "DATA INVALID"
+    COUNTER_TREND_WARNING = "COUNTER-TREND WARNING"
+
+
+class TradeDirection(str, Enum):
+    BUY = "BUY"
+    SELL = "SELL"
+    NONE = "NONE"
+
+
+class FeedStatus(str, Enum):
+    HEALTHY = "HEALTHY"
+    DEGRADED = "DEGRADED"
+    STALE = "STALE"
+    DISCONNECTED = "DISCONNECTED"
+    UNAVAILABLE = "UNAVAILABLE"
+
+
+class OptionType(str, Enum):
+    CALL = "call_options"
+    PUT = "put_options"

@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: prometheus-btc-terminal
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server/app.py
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: HOST
+        value: 0.0.0.0
+      - key: DELTA_INDIA_REST_URL
+        value: https://api.india.delta.exchange
+      - key: DELTA_INDIA_WS_PRIMARY
+        value: wss://socket.india.delta.exchange
+      - key: DELTA_INDIA_WS_FALLBACK
+        value: wss://public-socket.india.delta.exchange

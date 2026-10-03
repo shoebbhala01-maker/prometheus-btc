@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROMETHEUS BTC TERMINAL | Delta Exchange India</title>
+  <link rel="stylesheet" href="css/terminal.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="js/socket.io.min.js"></script>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="top-header">
+    <div class="brand-group">
+      <span class="brand-title">⚡ PROMETHEUS BTC TERMINAL</span>
+      <div id="conn-status-badge" class="exchange-badge">
+        <span id="conn-dot" class="dot-live"></span>
+        <span>DELTA INDIA LIVE</span>
+      </div>
+      <span class="badge badge-info" id="top-contract-badge">BTCUSD PERP</span>
+      <span class="badge badge-warn">PAPER TRADING ONLY</span>
+      <button id="lang-toggle-btn" class="lang-toggle-btn" onclick="toggleDesiMode()">🇮🇳 देसी भाषा (ON)</button>
+      <button id="audio-alert-btn" class="lang-toggle-btn audio-btn" onclick="toggleAudioAlerts()">🔔 आवाज़ अलर्ट: चालू</button>
+      <button id="test-audio-btn" class="lang-toggle-btn test-btn" onclick="playTestAlert()">🔊 टेस्ट आवाज़</button>
+      <span class="mobile-badge" onclick="showMobileInfo()" title="मोबाइल पर खोलने के लिए क्लिक करें">📱 मोबाइल: 192.168.1.140:5000</span>
+    </div>
+
+
+    <div class="header-telemetry">
+      <div class="h-chip">
+        <span class="h-k">BTC SPOT / INDEX <span class="desi-sub">लाइव भाव</span></span>
+        <span class="h-v c-accent" id="top-spot">$--</span>
+      </div>
+      <div class="h-chip">
+        <span class="h-k">SPREAD <span class="desi-sub">खरीद-बिक्री अंतर</span></span>
+        <span class="h-v" id="top-spread">$--</span>
+      </div>
+      <div class="h-chip">
+        <span class="h-k">SESSION VWAP <span class="desi-sub">दिन का औसत भाव</span></span>
+        <span class="h-v" id="top-vwap">$--</span>
+      </div>
+      <div class="h-chip">
+        <span class="h-k">ATR (14) <span class="desi-sub">कैंडल की चाल</span></span>
+        <span class="h-v" id="top-atr">$--</span>
+      </div>
+      <div class="h-chip">
+        <span class="h-k">MARKET REGIME <span class="desi-sub">मार्केट का मूड</span></span>
+        <span class="h-v c-warning" id="top-regime">INSUFFICIENT_DATA</span>
+      </div>
+      <div class="h-chip">
+        <span class="h-k">TIME (IST) <span class="desi-sub">भारतीय समय</span></span>
+        <span class="h-v" id="top-time">--:--:--</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <nav class="nav-tab-strip">
+    <button class="tab-btn active" data-tab="command_center">1. Command Center <span class="desi-sub">ट्रेडिंग डेस्क</span></button>
+    <button class="tab-btn" data-tab="futures_engine">2. Futures Engine <span class="desi-sub">फ्यूचर्स चार्ट</span></button>
+    <button class="tab-btn" data-tab="options_engine">3. Options Engine <span class="desi-sub">ऑप्शन्स चेन</span></button>
+    <button class="tab-btn" data-tab="breakout_engine">4. Breakout & Breakdown <span class="desi-sub">ब्रेकआउट ट्रैकर</span></button>
+    <button class="tab-btn" data-tab="spike_radar">5. Spike Radar <span class="desi-sub">झटका रडार</span></button>
+    <button class="tab-btn" data-tab="liquidity_orderflow">6. Order Flow <span class="desi-sub">खरीदार-विक्रेता</span></button>
+    <button class="tab-btn" data-tab="paper_trading">7. Paper Trading <span class="desi-sub">डेमो ट्रेड</span></button>
+    <button class="tab-btn" data-tab="backtesting">8. Backtesting <span class="desi-sub">टेस्टिंग</span></button>
+    <button class="tab-btn" data-tab="data_quality">9. Data Quality <span class="desi-sub">डेटा ऑडिट</span></button>
+  </nav>
+
+  <!-- MAIN TERMINAL VIEWPORT -->
+  <main class="terminal-container">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: COMMAND CENTER                      -->
+    <!-- ========================================== -->
+    <div id="tab-command_center" class="tab-content active">
+
+      <!-- 🔥 PROMINENT DESI TRADING DESK (SEEDHA BUY / SELL ACTION) -->
+      <section class="desi-desk-container" id="desi-desk-section">
+        <div class="desi-desk-header">
+          <div class="desi-desk-title">
+            <span>🇮🇳 देसी ट्रेडिंग डेस्क (Direct Action Desk)</span>
+          </div>
+          <div style="font-size:11px; color:#94a3b8;">
+            लाइव डेल्टा मार्केट के आधार पर सीधा निर्देश: <strong>BUY या SELL या WAIT</strong>
+          </div>
+        </div>
+
+        <!-- 1. BADA ACTION BADGE -->
+        <div id="desi-action-badge" class="desi-action-huge action-sell">
+          🔴 SHORT (SELL) KARO — BECHO!
+        </div>
+
+        <!-- 2. 4-POINT BLUEPRINT CARDS -->
+        <div class="desi-grid-4">
+          <!-- Step 1: Entry Zone -->
+          <div class="desi-step-card">
+            <div class="desi-step-title">🎯 1. KAHAN ORDER LAGAYEIN?</div>
+            <div class="desi-step-sub">Entry Zone (प्रवेश भाव)</div>
+            <div id="desi-entry-val" class="desi-step-val">$84,610 – $84,625</div>
+            <div id="desi-entry-help" class="desi-step-help">इस भाव के बीच शॉर्ट (Sell) लिमिट या मार्केट ऑर्डर लगाएं।</div>
+          </div>
+
+          <!-- Step 2: Stop Loss -->
+          <div class="desi-step-card" style="border-top:3px solid var(--color-bearish);">
+            <div class="desi-step-title c-bearish">🛑 2. NUKSAAN KAHAN ROKEIN?</div>
+            <div class="desi-step-sub">Stop Loss (नुकसान की सीमा)</div>
+            <div id="desi-sl-val" class="desi-step-val c-bearish">$84,655.0</div>
+            <div id="desi-sl-help" class="desi-step-help">इसके ऊपर 5m कैंडल क्लोज हुई तो तुरंत बाहर निकलें! (~$35-45 रिस्क)</div>
+          </div>
+
+          <!-- Step 3: Target 1 -->
+          <div class="desi-step-card" style="border-top:3px solid var(--color-bullish);">
+            <div class="desi-step-title c-bullish">💰 3. PEHLA MUNAFA (TP1)</div>
+            <div class="desi-step-sub">आधा प्रॉफिट बुक करें</div>
+            <div id="desi-tp1-val" class="desi-step-val c-bullish">$84,540.0</div>
+            <div id="desi-tp1-help" class="desi-step-help">यहाँ 50% प्रॉफिट बुक करें और बाकी का Stop Loss अपनी Entry पर ले आएं।</div>
+          </div>
+
+          <!-- Step 4: Target 2 -->
+          <div class="desi-step-card" style="border-top:3px solid var(--color-accent);">
+            <div class="desi-step-title c-accent">🏆 4. BADA MUNAFA (TP2)</div>
+            <div class="desi-step-sub">फाइनल टारगेट (रेंज फ्लोर)</div>
+            <div id="desi-tp2-val" class="desi-step-val c-accent">$84,480.0</div>
+            <div id="desi-tp2-help" class="desi-step-help">कंसोलिडेशन बॉक्स का बॉटम — यहाँ पूरा प्रॉफिट बुक करके बाहर आ जाएं।</div>
+          </div>
+        </div>
+
+        <!-- 3. DESI BHASHA ME WAJAH (SEEDHI BAAT) -->
+        <div class="desi-reason-box" id="desi-reason-text">
+          <strong>💡 देसी भाषा में वजह (Reason):</strong> मार्केट अभी एक Range (कंसोलिडेशन बॉक्स: $84,476 से $84,650) में है। प्राइस ऊपर की छत (Day High $84,624) को टेस्ट करके रुक रहा है और बायर्स में ऊपर खींचने का जोर नहीं है। रेंज मार्केट का नियम है 'ऊपर बेचो, नीचे खरीदो'। इसलिए यहाँ से नीचे गिरने के चांस 80%+ हैं।
+        </div>
+
+        <!-- 4. KHATRA / TRADE CANCEL RULE -->
+        <div class="desi-danger-box" id="desi-danger-text">
+          <strong>🚨 ट्रेड कब फेल माना जाएगा? (Cancel Rule):</strong> अगर कोई भी 5-मिनट की कैंडल <strong>$84,655 के ऊपर जाकर बंद (Close)</strong> हो जाए, तो मतलब बायर्स ने छत तोड़ दी है। उस समय ज़बरदस्ती होल्ड न करें, तुरंत ट्रेड से बाहर आ जाएं।
+        </div>
+
+        <!-- 5. DELTA INDIA POSITION SIZING -->
+        <div class="desi-delta-tips" id="desi-delta-tips">
+          <strong>⚖️ Delta Exchange India Rules:</strong> BTCUSD में <strong>1 Lot = 0.001 BTC</strong> (लगभग $84-85)। 200x लीवरेज का लालच बिल्कुल न करें! सुरक्षित ट्रेडिंग के लिए <strong>5x से 10x लीवरेज</strong> ही रखें।
+        </div>
+      </section>
+
+      <div class="grid-2">
+        <!-- High-Conviction Decision Card -->
+        <div class="t-card">
+          <div class="t-card-header">
+            <span class="t-card-title">🎯 ALGORITHMIC TRADE CONVICTION & DECISION</span>
+            <span class="badge badge-info">100-POINT MATRIX</span>
+          </div>
+          <div>
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Primary Decision State</div>
+            <div id="cc-decision-title" class="metric-big c-warning">WAIT / NO TRADE</div>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span class="tooltip-wrap">
+                Setup Score
+                <span class="tooltip-box">
+                  <strong>100-Point Setup Score:</strong><br>
+                  • Structure: 20 pts<br>
+                  • Momentum: 15 pts<br>
+                  • VWAP: 10 pts<br>
+                  • Flow: 15 pts<br>
+                  • OI/Funding: 15 pts<br>
+                  • Liquidity: 10 pts<br>
+                  • Volatility: 15 pts
+                </span>
+              </span>
+              <span id="cc-setup-score" class="mono-bold">-- / 100</span>
+            </div>
+            <div style="background:var(--bg-tertiary); height:8px; border-radius:4px; overflow:hidden;">
+              <div id="cc-score-bar-fill" style="width:0%; height:100%; background:var(--color-accent); transition:width 0.3s;"></div>
+            </div>
+          </div>
+
+          <div style="margin-top:10px;">
+            <div style="font-weight:700; color:var(--text-secondary); margin-bottom:4px; font-size:11px;">CONVICTION EVIDENCE:</div>
+            <ul id="cc-evidence-list" style="list-style:none; display:flex; flex-direction:column; gap:4px; font-size:12px;">
+              <li>Gathering live exchange telemetry...</li>
+            </ul>
+          </div>
+
+          <div style="margin-top:6px;">
+            <div style="font-weight:700; color:var(--text-secondary); margin-bottom:4px; font-size:11px;">ACTIVE CONFLICTS / PENALTIES:</div>
+            <ul id="cc-conflict-list" style="list-style:none; display:flex; flex-direction:column; gap:4px; font-size:12px;">
+              <li>None</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Battle Map (Support/Resistance Structure) -->
+        <div class="t-card">
+          <div class="t-card-header">
+            <span class="t-card-title">🗺️ LIQUIDITY BATTLE MAP & RANGE</span>
+            <span class="badge badge-bull">OBSERVED LEVELS</span>
+          </div>
+
+          <!-- Resistance Node -->
+          <div style="background:rgba(239,68,68,0.08); border-left:3px solid var(--color-bearish); padding:10px; border-radius:4px;">
+            <div style="display:flex; justify-content:space-between;">
+              <span id="bm-res-name" class="mono-bold c-bearish">Closest Resistance</span>
+              <span id="bm-res-price" class="mono-bold">$85,200.0</span>
+            </div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+              Distance: <span id="bm-res-dist">-- ATRs</span>
+            </div>
+          </div>
+
+          <!-- Spot Center Node -->
+          <div style="background:rgba(56,189,248,0.08); border:1px dashed var(--color-accent); padding:12px; border-radius:4px; text-align:center;">
+            <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">CURRENT MID PRICE</div>
+            <div id="bm-spot-price" class="metric-big c-accent">$--</div>
+          </div>
+
+          <!-- Support Node -->
+          <div style="background:rgba(16,185,129,0.08); border-left:3px solid var(--color-bullish); padding:10px; border-radius:4px;">
+            <div style="display:flex; justify-content:space-between;">
+              <span id="bm-sup-name" class="mono-bold c-bullish">Closest Support</span>
+              <span id="bm-sup-price" class="mono-bold">$84,100.0</span>
+            </div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+              Distance: <span id="bm-sup-dist">-- ATRs</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: FUTURES ENGINE                      -->
+    <!-- ========================================== -->
+    <div id="tab-futures_engine" class="tab-content">
+      <div class="grid-2">
+        <div class="t-card">
+          <div class="t-card-header">
+            <span class="t-card-title">📈 BTCUSD PERPETUAL CANDLES (5M)</span>
+            <span class="badge badge-info">DELTA EXCHANGE INDIA</span>
+          </div>
+          <div style="height:320px; width:100%; position:relative;">
+            <canvas id="futures-candle-canvas"></canvas>
+          </div>
+        </div>
+
+        <div class="t-card">
+          <div class="t-card-header">
+            <span class="t-card-title">📜 CONTRACT SPECIFICATIONS & ORDERBOOK</span>
+            <span id="fut-symbol" class="badge badge-bull">BTCUSD</span>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;">
+            <div class="h-chip">
+              <span class="h-k">CONTRACT VALUE</span>
+              <span class="h-v" id="fut-val">0.001 BTC</span>
+            </div>
+            <div class="h-chip">
+              <span class="h-k">TICK SIZE</span>
+              <span class="h-v" id="fut-tick">$0.5</span>
+            </div>
+            <div class="h-chip">
+              <span class="h-k">COMMISSION RATES</span>
+              <span class="h-v" id="fut-fees">Maker: 0.02% | Taker: 0.05%</span>
+            </div>
+            <div class="h-chip">
+              <span class="h-k">BEST BID / ASK</span>
+              <span class="h-v" id="fut-bid">$-- / $--</span>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <div style="font-weight:700; color:var(--text-secondary); margin-bottom:8px;">L2 ORDERBOOK DEPTH VISUALIZER</div>
+            <div id="fut-depth-bars">Loading Level 2 Depth...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: OPTIONS ENGINE                      -->
+    <!-- ========================================== -->
+    <div id="tab-options_engine" class="tab-content">
+      <div class="t-card">
+        <div class="t-card-header">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span class="t-card-title">📊 BTC OPTIONS LADDER & GREEKS</span>
+            <select id="opt-expiry-select" style="background:var(--bg-tertiary); color:var(--text-primary); border:1px solid var(--border-subtle); padding:4px 8px; border-radius:4px; font-size:12px;">
+              <option value="">Discovering Expiries...</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:16px; font-size:11px;">
+            <span>Settlement (IST): <strong id="opt-expiry-ist" class="c-accent">--</strong></span>
+            <span>Time Left: <strong id="opt-hours-left">--</strong></span>
+            <span>ATM Strike: <strong id="opt-atm-strike">--</strong></span>
+            <span>PCR (OI): <strong id="opt-pcr-oi">--</strong></span>
+            <span>Max Pain: <strong id="opt-max-pain" class="c-purple">--</strong></span>
+          </div>
+        </div>
+
+        <div style="overflow-x:auto; margin-top:8px;">
+          <table class="t-table">
+            <thead>
+              <tr>
+                <th colspan="5" style="text-align:center; background:rgba(16,185,129,0.1); color:var(--color-bullish);">CALL OPTIONS (CE)</th>
+                <th style="text-align:center; background:var(--bg-secondary);">STRIKE</th>
+                <th colspan="5" style="text-align:center; background:rgba(239,68,68,0.1); color:var(--color-bearish);">PUT OPTIONS (PE)</th>
+              </tr>
+              <tr>
+                <th>OI (BTC)</th>
+                <th>IV</th>
+                <th>Delta</th>
+                <th>Bid</th>
+                <th>Ask</th>
+                <th style="text-align:center;">Strike ($)</th>
+                <th>Bid</th>
+                <th>Ask</th>
+                <th>Delta</th>
+                <th>IV</th>
+                <th>OI (BTC)</th>
+              </tr>
+            </thead>
+            <tbody id="opt-ladder-body">
+              <tr><td colspan="11" style="text-align:center; padding:20px;">Discovering listed BTC call & put option contracts from Delta Exchange India...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: BREAKOUT & BREAKDOWN                -->
+    <!-- ========================================== -->
+    <div id="tab-breakout_engine" class="tab-content">
+      <div class="grid-2">
+        <div class="t-card">
+          <div class="t-card-header">
+            <span class="t-card-title">⚡ 8-STAGE BREAKOUT & BREAKDOWN STATE MACHINE</span>
+            <span id="bo-stage" class="badge badge-info">RANGE_IDENTIFIED</span>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;">
+            <div class="h-chip">
+              <span class="h-k">DIRECTION</span>
+              <span class="h-v" id="bo-direction">NONE</span>
+            </div>
+            <div class="h-chip">
+              <span class="h-k">REFERENCE LEVEL</span>
+              <span class="h-v" id="bo-ref-level">$--</span>
+            </div>
+            <div class="h-chip">
+              <span class="h-k">PROPOSED STOP LOSS</span>
+              <span class="h-v c-bearish" id="bo-sl">$--</span>
+            </div>
+            <div class="h-chip">
+              <span class="h-k">PROPOSED TARGET</span>
+              <span class="h-v c-bullish" id="bo-tp">$--</span>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <div style="font-weight:700; color:var(--text-secondary); margin-bottom:6px; font-size:11px;">STATE TRANSITION LOG & EVIDENCE:</div>
+            <ul id="bo-reasons" style="list-style:none; display:flex; flex-direction:column; gap:4px; font-size:12px;">
+              <li>Monitoring range boundary compression...</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="t-card">
+          <div class="t-card-header">
+            <span class="t-card-title">🛡️ CONFIRMATION GATES & FAKEOUT FILTER</span>
+            <span class="badge badge-warn">ANTI-CHOP RULE</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-secondary); display:flex; flex-direction:column; gap:8px;">
+            <div>1. <strong>Confirmed Candle Close Gate:</strong> Never signals on live wick penetrations. Requires confirmed 5m bar close beyond level + ATR buffer.</div>
+            <div>2. <strong>Volume Expansion Gate:</strong> Relative Volume (RVOL) must exceed 1.4x 20-period moving average.</div>
+            <div>3. <strong>Aggressive Taker Flow Gate:</strong> Delta Exchange India trade aggressor delta must be positive for breakout, negative for breakdown.</div>
+            <div>4. <strong>Trap (Failed Breakout) Detector:</strong> Price returning inside prior range by > 0.3 ATR triggers FAILED_BREAKOUT trap state.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 5: SPIKE/REVERSAL RADAR                -->
+    <!-- ========================================== -->
+    <div id="tab-spike_radar" class="tab-content">
+      <div class="grid-2">
+        <div class="t-card">
+          <div class="t-card-header">
+            <span class="t-card-title">🚨 7-STAGE SPIKE & MOVE EXHAUSTION RADAR</span>
+            <span class="badge badge-warn">EARLY WARNING</span>
+          </div>
+          <div>
+            <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">CURRENT RADAR STATE</div>
+            <div id="sr-state" class="metric-big c-bullish">NORMAL</div>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-top:10px;">
+            <div class="h-chip">
+              <span class="h-k">5M VELOCITY</span>
+              <span class="h-v" id="sr-vel">0.00%/min</span>
+            </div>
+            <div class="h-chip">
+              <span class="h-k">5M RETURN</span>
+              <span class="h-v" id="sr-ret-5m">0.00%</span>
+            </div>
+            <div class="h-chip">
+              <span class="h-k">DISPLACEMENT</span>
+              <span class="h-v" id="sr-disp-atr">0.0 ATRs</span>
+            </div>
+          </div>
+
+          <div style="margin-top:14px; background:var(--bg-tertiary); padding:10px; border-radius:4px; border:1px solid var(--border-subtle);">
+            <div style="font-weight:700; color:var(--color-accent); font-size:11px; margin-bottom:4px;">TACTICAL ACTION GUIDANCE:</div>
+            <div id="sr-guidance" style="font-size:12px;">Standard market conditions.</div>
+          </div>
+
+          <div style="margin-top:10px;">
+            <div style="font-weight:700; color:var(--text-secondary); margin-bottom:4px; font-size:11px;">RADAR EVIDENCE:</div>
+            <ul id="sr-reasons" style="list-style:none; display:flex; flex-direction:column; gap:4px; font-size:12px;">
+              <li>Velocity within normal baseline limits.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="t-card">
+          <div class="t-card-header">
+            <span class="t-card-title">📖 RADAR METHODOLOGY & STATES</span>
+            <span class="badge badge-info">STATISTICAL BASELINE</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-secondary); display:flex; flex-direction:column; gap:8px;">
+            <div>• <strong>NORMAL:</strong> Price velocity &lt; 0.15%/min, RVOL &lt; 1.5x.</div>
+            <div>• <strong>MOVE_ACCELERATING:</strong> 5m velocity &gt; 0.25%/min, RVOL &gt; 1.8x.</div>
+            <div>• <strong>SPIKE_DETECTED:</strong> Sudden price expansion &gt; 1.5 ATRs in 5 min.</div>
+            <div>• <strong>EXHAUSTION_RISK:</strong> Extreme stretch from VWAP (&gt; 2.5 ATRs) or CVD divergence.</div>
+            <div>• <strong>REVERSAL_RISK:</strong> Price fails to push new extreme and opposite aggressive delta enters.</div>
+            <div>• <strong>REVERSAL_CONFIRMED:</strong> Confirmed candle close opposite move crossing micro-pivot.</div>
+            <div>• <strong>RESET:</strong> Cooldown cycle after thrust.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 6: LIQUIDITY & ORDER FLOW              -->
+    <!-- ========================================== -->
+    <div id="tab-liquidity_orderflow" class="tab-content">
+      <div class="grid-2">
+        <div class="t-card">
+          <div class="t-card-header">
+            <span class="t-card-title">📊 CUMULATIVE VOLUME DELTA (CVD)</span>
+            <span class="badge badge-info">AGGRESSOR FLOW</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <span>Current CVD: <strong id="of-cvd" class="mono-bold c-accent">0</strong></span>
+            <span>25 bps Imbalance: <strong id="of-imbalance" class="mono-bold">0.00</strong></span>
+          </div>
+          <div style="height:140px; width:100%;">
+            <canvas id="cvd-canvas"></canvas>
+          </div>
+        </div>
+
+        <div class="t-card">
+          <div class="t-card-header">
+            <span class="t-card-title">📍 LIQUIDITY LEVELS & ATR DISTANCES</span>
+            <span class="badge badge-bull">OBSERVED VS INFERRED</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="t-table">
+              <thead>
+                <tr>
+                  <th>Level Name</th>
+                  <th>Price ($)</th>
+                  <th>Distance ($)</th>
+                  <th>Distance (ATRs)</th>
+                  <th>Classification</th>
+                </tr>
+              </thead>
+              <tbody id="liq-table-body">
+                <tr><td colspan="5" style="text-align:center;">Calculating liquidity structure...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 7: PAPER TRADING                       -->
+    <!-- ========================================== -->
+    <div id="tab-paper_trading" class="tab-content">
+      <div class="grid-2">
+        <div class="t-card">
+          <div class="t-card-header">
+            <span class="t-card-title">💼 VIRTUAL ACCOUNT & ACTIVE POSITION</span>
+            <span class="badge badge-warn">SIMULATED EXECUTION</span>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;">
+            <div class="h-chip">
+              <span class="h-k">ACCOUNT EQUITY</span>
+              <span class="h-v c-accent" id="pt-equity">$10,000.00</span>
+            </div>
+            <div class="h-chip">
+              <span class="h-k">REALIZED P&L</span>
+              <span class="h-v" id="pt-pnl">$0.00</span>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <div style="font-weight:700; color:var(--text-secondary); margin-bottom:6px; font-size:11px;">ACTIVE POSITION STATUS:</div>
+            <div id="pt-active-pos">Loading position...</div>
+          </div>
+        </div>
+
+        <div class="t-card">
+          <div class="t-card-header">
+            <span class="t-card-title">⚙️ RISK GOVERNOR SETTINGS</span>
+            <span class="badge badge-info">CAPITAL PROTECTION</span>
+          </div>
+          <form id="risk-settings-form" style="display:flex; flex-direction:column; gap:10px;">
+            <div>
+              <label style="font-size:11px; color:var(--text-muted);">Virtual Capital ($)</label>
+              <input type="number" id="risk-cap" value="10000" style="width:100%; background:var(--bg-tertiary); color:var(--text-primary); border:1px solid var(--border-subtle); padding:6px; border-radius:4px; font-family:monospace;">
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--text-muted);">Max Risk Per Trade (%)</label>
+              <input type="number" step="0.1" id="risk-pct" value="1.0" style="width:100%; background:var(--bg-tertiary); color:var(--text-primary); border:1px solid var(--border-subtle); padding:6px; border-radius:4px; font-family:monospace;">
+            </div>
+            <div>
+              <label style="font-size:11px; color:var(--text-muted);">Max Daily Drawdown Limit (%)</label>
+              <input type="number" step="0.5" id="risk-daily-loss" value="3.0" style="width:100%; background:var(--bg-tertiary); color:var(--text-primary); border:1px solid var(--border-subtle); padding:6px; border-radius:4px; font-family:monospace;">
+            </div>
+            <button type="submit" class="btn-primary" style="margin-top:4px;">UPDATE RISK SETTINGS</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="t-card" style="margin-top:16px;">
+        <div class="t-card-header">
+          <span class="t-card-title">📜 PAPER TRADING AUDIT TRAIL</span>
+          <span class="badge badge-info">EXECUTION LOG</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="t-table">
+            <thead>
+              <tr>
+                <th>Trade ID</th>
+                <th>Side</th>
+                <th>Entry ($)</th>
+                <th>Exit ($)</th>
+                <th>Contracts</th>
+                <th>Net P&L ($)</th>
+                <th>Frictions ($)</th>
+                <th>Exit Reason</th>
+              </tr>
+            </thead>
+            <tbody id="pt-trades-body">
+              <tr><td colspan="8" style="text-align:center;">No trades recorded in this session.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 8: BACKTESTING & PERFORMANCE           -->
+    <!-- ========================================== -->
+    <div id="tab-backtesting" class="tab-content">
+      <div class="t-card">
+        <div class="t-card-header">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span class="t-card-title">🔬 HISTORICAL WALK-FORWARD BACKTESTER</span>
+            <input type="number" id="bt-min-score" value="70" placeholder="Min Score (70)" style="width:110px; background:var(--bg-tertiary); color:var(--text-primary); border:1px solid var(--border-subtle); padding:4px 8px; border-radius:4px; font-size:11px;">
+            <button id="btn-run-backtest" class="btn-primary">RUN HISTORICAL BACKTEST</button>
+          </div>
+          <span class="badge badge-info">ZERO LOOK-AHEAD BIAS</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-top:12px;">
+          <div class="h-chip">
+            <span class="h-k">NET PROFIT</span>
+            <span class="metric-big c-bullish" id="bt-net-profit">$--</span>
+          </div>
+          <div class="h-chip">
+            <span class="h-k">WIN RATE</span>
+            <span class="metric-big" id="bt-winrate">--%</span>
+          </div>
+          <div class="h-chip">
+            <span class="h-k">PROFIT FACTOR</span>
+            <span class="metric-big" id="bt-pf">--</span>
+          </div>
+          <div class="h-chip">
+            <span class="h-k">MAX DRAWDOWN</span>
+            <span class="metric-big c-bearish" id="bt-maxdd">$--</span>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-top:12px;">
+          <div class="h-chip">
+            <span class="h-k">TOTAL TRADES</span>
+            <span class="h-v" id="bt-trades">--</span>
+          </div>
+          <div class="h-chip">
+            <span class="h-k">EXPECTANCY PER TRADE</span>
+            <span class="h-v" id="bt-expectancy">$--</span>
+          </div>
+          <div class="h-chip">
+            <span class="h-k">TOTAL FRICTIONS (FEES & SLIPPAGE)</span>
+            <span class="h-v" id="bt-frictions">$--</span>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <div style="font-weight:700; color:var(--text-secondary); margin-bottom:6px; font-size:11px;">SAMPLE HISTORICAL TRADES LOG:</div>
+          <div style="overflow-x:auto;">
+            <table class="t-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Direction</th>
+                  <th>Entry ($)</th>
+                  <th>Exit ($)</th>
+                  <th>Contracts</th>
+                  <th>Net PnL ($)</th>
+                  <th>Fees ($)</th>
+                  <th>Exit Reason</th>
+                </tr>
+              </thead>
+              <tbody id="bt-trades-body">
+                <tr><td colspan="8" style="text-align:center;">Click "RUN HISTORICAL BACKTEST" to simulate on Delta India historical candles.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 9: DATA QUALITY & AUDIT                -->
+    <!-- ========================================== -->
+    <div id="tab-data_quality" class="tab-content">
+      <div class="grid-2">
+        <div class="t-card">
+          <div class="t-card-header">
+            <span class="t-card-title">🛡️ REAL-TIME FEED INTEGRITY WATCHDOG</span>
+            <span class="badge badge-bull">CIRCUIT BREAKER: ARMED</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="t-table">
+              <thead>
+                <tr>
+                  <th>Feed Name</th>
+                  <th>Status</th>
+                  <th>Age (Sec)</th>
+                  <th>Last Update (IST)</th>
+                  <th>Latency</th>
+                  <th>Errors</th>
+                </tr>
+              </thead>
+              <tbody id="health-feeds-body">
+                <tr><td colspan="6" style="text-align:center;">Checking feeds...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:11px; color:var(--text-muted);">
+            <span>WebSocket Reconnects: <strong id="health-reconnects">0</strong></span>
+            <span>Calculation Exceptions: <strong id="health-exceptions">0</strong></span>
+          </div>
+        </div>
+
+        <div class="t-card">
+          <div class="t-card-header">
+            <span class="t-card-title">📐 FORMULA-BY-FORMULA CALCULATION AUDIT</span>
+            <span class="badge badge-info">TRACEABLE MATH</span>
+          </div>
+          <div style="font-size:11px; display:flex; flex-direction:column; gap:8px;">
+            <div>• <strong>Volume Delta:</strong> <code>Aggressive Buy Volume - Aggressive Sell Volume</code> (Classified via Delta trade taker role).</div>
+            <div>• <strong>Normalized Delta:</strong> <code>Volume Delta / Total Classified Volume</code></div>
+            <div>• <strong>VWAP ATR Distance:</strong> <code>(Spot Price - Session VWAP) / ATR_14</code></div>
+            <div>• <strong>Depth Imbalance (25 bps):</strong> <code>(Bid Depth - Ask Depth) / (Bid Depth + Ask Depth)</code> within ±25 bps of mid price.</div>
+            <div>• <strong>Position Sizing:</strong> <code>(Equity * 1%) / ((|Entry - Stop| + Fees) * 0.001 BTC)</code></div>
+            <div>• <strong>Options Multiplier:</strong> <code>0.001 BTC per contract</code></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="js/charts.js"></script>
+  <script src="js/terminal.js"></script>
+</body>
+</html>
