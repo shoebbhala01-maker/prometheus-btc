@@ -19,6 +19,9 @@ class SetupScoringEngine:
             "liquidity_execution": 10.0,
             "volatility_exhaustion": 15.0
         }
+        self.current_decision = DecisionState.NO_TRADE.value
+        self.current_direction = "NONE"
+
 
     def evaluate_score(
         self,
@@ -258,25 +261,45 @@ class SetupScoringEngine:
 
         final_score = max(0.0, round(raw_total - penalties, 1))
 
-        # Decision State Logic
+        # Decision State Logic with Hysteresis Stability (Schmitt Trigger)
+        # Entry threshold: 75.0 | Holding exit threshold: 58.0
         decision = DecisionState.NO_TRADE.value
         trade_dir = "NONE"
 
         if regime_output.get("is_counter_trend", False) and final_score >= 65.0:
             decision = DecisionState.COUNTER_TREND_WARNING.value
             trade_dir = "BUY" if direction_bias > 0 else "SELL"
+            self.current_decision = decision
+            self.current_direction = trade_dir
         elif final_score >= 75.0 and direction_bias > 0.5:
             decision = DecisionState.LONG_SETUP.value
             trade_dir = "BUY"
+            self.current_decision = decision
+            self.current_direction = trade_dir
         elif final_score >= 75.0 and direction_bias < -0.5:
+            decision = DecisionState.SHORT_SETUP.value
+            trade_dir = "SELL"
+            self.current_decision = decision
+            self.current_direction = trade_dir
+        elif self.current_decision == DecisionState.LONG_SETUP.value and final_score >= 58.0 and direction_bias >= -0.2:
+            # Hold active LONG setup during minor 5m compression pullbacks
+            decision = DecisionState.LONG_SETUP.value
+            trade_dir = "BUY"
+        elif self.current_decision == DecisionState.SHORT_SETUP.value and final_score >= 58.0 and direction_bias <= 0.2:
+            # Hold active SHORT setup during minor 5m compression bounces
             decision = DecisionState.SHORT_SETUP.value
             trade_dir = "SELL"
         elif final_score >= 55.0:
             decision = DecisionState.WAIT.value
             trade_dir = "NONE"
+            self.current_decision = decision
+            self.current_direction = trade_dir
         else:
             decision = DecisionState.NO_TRADE.value
             trade_dir = "NONE"
+            self.current_decision = decision
+            self.current_direction = trade_dir
+
 
         invalidation_rules = [
             "Candle close returning inside prior range",
