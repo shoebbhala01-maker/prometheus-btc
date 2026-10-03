@@ -123,6 +123,37 @@ def get_health():
     return jsonify(health_watchdog.evaluate_health())
 
 
+@app.route("/api/telegram/status", methods=["GET"])
+def get_telegram_status():
+    from engine.telegram_alerter import telegram_alerter
+    return jsonify({
+        "configured": telegram_alerter.is_configured(),
+        "enabled": telegram_alerter.enabled,
+        "chat_id": telegram_alerter.chat_id[-4:].rjust(len(telegram_alerter.chat_id), "*") if telegram_alerter.chat_id else ""
+    })
+
+
+@app.route("/api/telegram/config", methods=["POST"])
+def set_telegram_config():
+    from engine.telegram_alerter import telegram_alerter
+    data = request.json or {}
+    token = data.get("bot_token", "")
+    chat_id = data.get("chat_id", "")
+    enabled = data.get("enabled", True)
+    success = telegram_alerter.save_config(token, chat_id, enabled)
+    if success:
+        return jsonify({"status": "SUCCESS", "message": "Telegram configuration saved"})
+    return jsonify({"status": "ERROR", "message": "Failed to save configuration"}), 500
+
+
+@app.route("/api/telegram/test", methods=["POST"])
+def send_telegram_test():
+    from engine.telegram_alerter import telegram_alerter
+    res = telegram_alerter.send_test_alert()
+    return jsonify(res)
+
+
+
 @socketio.on("connect")
 def on_client_connect():
     state = terminal_service.get_latest_state()
@@ -155,8 +186,9 @@ def start_server(host: str = "0.0.0.0", port: Optional[int] = None):
     terminal_service.register_broadcast_cb(_on_state_tick)
     terminal_service.start()
     threading.Thread(target=_ws_broadcast_loop, daemon=True).start()
-    print(f"🚀 Prometheus BTC Terminal starting at http://{h}:{p}")
+    print(f"Prometheus BTC Terminal starting at http://{h}:{p}")
     socketio.run(app, host=h, port=p, debug=False, use_reloader=False, allow_unsafe_werkzeug=True)
+
 
 
 if __name__ == "__main__":

@@ -312,15 +312,22 @@ function renderCommandCenter(state) {
     confList.innerHTML = sd.conflicts.map(c => `<li><span class="c-warning">⚠</span> ${c}</li>`).join('') || '<li>No active conflicts</li>';
   }
 
-  // Battle Map
-  setText('bm-res-name', l.closest_resistance?.name || 'Resistance');
-  setText('bm-res-price', `$${l.closest_resistance?.price || '--'}`);
-  setText('bm-res-dist', `${l.closest_resistance?.dist_atr || '--'} ATRs`);
-  setText('bm-spot-price', `$${t.spot || '--'}`);
-  setText('bm-sup-name', l.closest_support?.name || 'Support');
-  setText('bm-sup-price', `$${l.closest_support?.price || '--'}`);
-  setText('bm-sup-dist', `${l.closest_support?.dist_atr || '--'} ATRs`);
+  // Dynamic 5-Level Battle Ladder
+  const resP = l.closest_resistance?.price || (t.spot + atr);
+  const supP = l.closest_support?.price || (t.spot - atr);
+  const targetP = (Math.max(resP + (2.5 * atr), t.spot + 350.0)).toFixed(1);
+  const ceilingP = resP.toFixed(1);
+  const supportP = `${(supP - (0.5 * atr)).toFixed(1)} – ${supP.toFixed(1)}`;
+  const invalidP = (Math.min(supP - (2.0 * atr), 84640.0)).toFixed(1);
+
+  setText('ladder-target-price', `$${targetP}`);
+  setText('ladder-ceiling-price', `$${ceilingP}`);
+  setText('ladder-spot-price', `$${(t.spot || 0).toLocaleString()}`);
+  setText('ladder-spot-desc', `${reg.regime || 'Consolidation'} (स्कोर: ${sd.final_score || 0}/100)`);
+  setText('ladder-support-price', `$${supportP}`);
+  setText('ladder-invalid-price', `$${invalidP}`);
 }
+
 
 // ==========================================
 // 4. AUDIO & VOICE ALERT ENGINE (NO CDN NEEDED)
@@ -811,3 +818,78 @@ function setText(id, text) {
   const el = document.getElementById(id);
   if (el) el.textContent = text;
 }
+
+// 7. TELEGRAM SETUP MODAL CONTROLLER
+function toggleTelegramModal() {
+  const m = document.getElementById('telegram-modal');
+  if (!m) return;
+  const isHidden = m.style.display === 'none' || m.style.display === '';
+  m.style.display = isHidden ? 'flex' : 'none';
+
+  if (isHidden) {
+    // Fetch current status
+    fetch('/api/telegram/status')
+      .then(res => res.json())
+      .then(d => {
+        if (d.configured) {
+          const statusEl = document.getElementById('tg-status-msg');
+          if (statusEl) {
+            statusEl.innerHTML = `<span style="color:#34d399;">✔ टेलीग्राम कनेक्टेड है (Chat ID: ${d.chat_id})</span>`;
+          }
+        }
+      })
+      .catch(() => {});
+  }
+}
+
+function saveTelegramConfig() {
+  const token = document.getElementById('tg-token-input').value.trim();
+  const chatId = document.getElementById('tg-chatid-input').value.trim();
+  const statusEl = document.getElementById('tg-status-msg');
+
+  if (!token || !chatId) {
+    if (statusEl) statusEl.innerHTML = '<span style="color:#ef4444;">कृपया Bot Token और Chat ID दोनों भरें!</span>';
+    return;
+  }
+
+  if (statusEl) statusEl.innerHTML = '<span style="color:#38bdf8;">सेव हो रहा है...</span>';
+
+  fetch('/api/telegram/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ bot_token: token, chat_id: chatId, enabled: true })
+  })
+  .then(res => res.json())
+  .then(d => {
+    if (d.status === 'SUCCESS') {
+      if (statusEl) statusEl.innerHTML = '<span style="color:#34d399;">✔ सफलतापूर्वक सेव हो गया! अब टेस्ट मेसेज भेजें।</span>';
+    } else {
+      if (statusEl) statusEl.innerHTML = `<span style="color:#ef4444;">त्रुटि: ${d.message}</span>`;
+    }
+  })
+  .catch(err => {
+    if (statusEl) statusEl.innerHTML = `<span style="color:#ef4444;">त्रुटि: ${err}</span>`;
+  });
+}
+
+function testTelegramAlert() {
+  const statusEl = document.getElementById('tg-status-msg');
+  if (statusEl) statusEl.innerHTML = '<span style="color:#38bdf8;">📲 आपके टेलीग्राम पर टेस्ट मेसेज भेजा जा रहा है...</span>';
+
+  fetch('/api/telegram/test', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(res => res.json())
+  .then(d => {
+    if (d.ok === false) {
+      if (statusEl) statusEl.innerHTML = `<span style="color:#ef4444;">❌ फेल: ${d.description || d.message} (कृपया टोकन और चैट आईडी जांचें)</span>`;
+    } else {
+      if (statusEl) statusEl.innerHTML = '<span style="color:#34d399;">✅ टेस्ट मेसेज भेज दिया गया! अपना टेलीग्राम ऐप चेक करें।</span>';
+    }
+  })
+  .catch(err => {
+    if (statusEl) statusEl.innerHTML = `<span style="color:#ef4444;">त्रुटि: ${err}</span>`;
+  });
+}
+

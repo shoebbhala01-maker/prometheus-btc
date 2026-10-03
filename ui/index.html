@@ -25,8 +25,10 @@
       <button id="lang-toggle-btn" class="lang-toggle-btn" onclick="toggleDesiMode()">🇮🇳 देसी भाषा (ON)</button>
       <button id="audio-alert-btn" class="lang-toggle-btn audio-btn" onclick="toggleAudioAlerts()">🔔 आवाज़ अलर्ट: चालू</button>
       <button id="test-audio-btn" class="lang-toggle-btn test-btn" onclick="playTestAlert()">🔊 टेस्ट आवाज़</button>
+      <button id="tg-modal-btn" class="lang-toggle-btn" style="background:linear-gradient(135deg, #0369a1, #0284c7); border-color:#38bdf8;" onclick="toggleTelegramModal()">✈️ टेलीग्राम अलर्ट</button>
       <span class="mobile-badge" onclick="showMobileInfo()" title="मोबाइल पर खोलने के लिए क्लिक करें">📱 मोबाइल: 192.168.1.140:5000</span>
     </div>
+
 
 
     <div class="header-telemetry">
@@ -200,33 +202,53 @@
             <span class="badge badge-bull">OBSERVED LEVELS</span>
           </div>
 
-          <!-- Resistance Node -->
-          <div style="background:rgba(239,68,68,0.08); border-left:3px solid var(--color-bearish); padding:10px; border-radius:4px;">
-            <div style="display:flex; justify-content:space-between;">
-              <span id="bm-res-name" class="mono-bold c-bearish">Closest Resistance</span>
-              <span id="bm-res-price" class="mono-bold">$85,200.0</span>
+          <div class="battle-ladder-wrap">
+            <!-- Level 5: Target 2 -->
+            <div class="ladder-step step-target">
+              <div>
+                <div class="ladder-tag" style="color:#c084fc;">🏆 5. बड़ा संस्थागत टारगेट (Target 2)</div>
+                <div class="ladder-desc">Overhead Liquidity Pool</div>
+              </div>
+              <div class="ladder-price" style="color:#c084fc;" id="ladder-target-price">$85,200.0</div>
             </div>
-            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
-              Distance: <span id="bm-res-dist">-- ATRs</span>
+
+            <!-- Level 4: Breakout Ceiling -->
+            <div class="ladder-step step-ceiling">
+              <div>
+                <div class="ladder-tag c-bearish" id="ladder-ceiling-tag">🚀 4. आज का हाई (Ceiling/Breakout)</div>
+                <div class="ladder-desc">इसके ऊपर कैंडल क्लोज = रॉकेट</div>
+              </div>
+              <div class="ladder-price c-bearish" id="ladder-ceiling-price">$84,920.0</div>
+            </div>
+
+            <!-- Level 3: Current Live Price -->
+            <div class="ladder-step step-spot">
+              <div>
+                <div class="ladder-tag c-accent">📍 3. अभी का लाइव भाव (Current Price)</div>
+                <div class="ladder-desc" id="ladder-spot-desc">कंसोलिडेशन में (स्कोर 72/100)</div>
+              </div>
+              <div class="ladder-price c-accent" id="ladder-spot-price">$84,812.5</div>
+            </div>
+
+            <!-- Level 2: Buy Support -->
+            <div class="ladder-step step-support">
+              <div>
+                <div class="ladder-tag c-bullish" id="ladder-support-tag">🟢 2. खरीदारी ज़ोन (Buy Dip Support)</div>
+                <div class="ladder-desc">सपोर्ट बाउंस = सबसे सुरक्षित एंट्री</div>
+              </div>
+              <div class="ladder-price c-bullish" id="ladder-support-price">$84,780 – $84,803</div>
+            </div>
+
+            <!-- Level 1: Invalidation -->
+            <div class="ladder-step step-invalid">
+              <div>
+                <div class="ladder-tag" style="color:#f59e0b;">🛑 1. इनवैलिडेशन (Invalidation Floor)</div>
+                <div class="ladder-desc">इसके नीचे 5m कैंडल बंद = बुलिश चाल रद्द</div>
+              </div>
+              <div class="ladder-price" style="color:#f59e0b;" id="ladder-invalid-price">$84,640.0</div>
             </div>
           </div>
 
-          <!-- Spot Center Node -->
-          <div style="background:rgba(56,189,248,0.08); border:1px dashed var(--color-accent); padding:12px; border-radius:4px; text-align:center;">
-            <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">CURRENT MID PRICE</div>
-            <div id="bm-spot-price" class="metric-big c-accent">$--</div>
-          </div>
-
-          <!-- Support Node -->
-          <div style="background:rgba(16,185,129,0.08); border-left:3px solid var(--color-bullish); padding:10px; border-radius:4px;">
-            <div style="display:flex; justify-content:space-between;">
-              <span id="bm-sup-name" class="mono-bold c-bullish">Closest Support</span>
-              <span id="bm-sup-price" class="mono-bold">$84,100.0</span>
-            </div>
-            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
-              Distance: <span id="bm-sup-dist">-- ATRs</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -685,7 +707,44 @@
       </div>
     </div>
 
+    <!-- ✈️ TELEGRAM 24/7 SETUP MODAL -->
+    <div id="telegram-modal" class="modal-overlay" style="display:none;">
+      <div class="modal-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h3 style="font-size:16px; color:#38bdf8; display:flex; align-items:center; gap:8px;">
+            ✈️ Telegram 24/7 Phone Alerts
+          </h3>
+          <button onclick="toggleTelegramModal()" style="background:none; border:none; color:#fff; font-size:18px; cursor:pointer;">✕</button>
+        </div>
+        
+        <div style="font-size:12px; color:#cbd5e1; line-height:1.5; margin-bottom:14px; background:rgba(56,189,248,0.08); padding:10px; border-radius:4px; border-left:3px solid #38bdf8;">
+          <strong>फ़ोन जेब में हो या स्क्रीन बंद हो, तब भी रिंगटोन बजेगी:</strong><br>
+          1. Telegram ऐप में <code>@BotFather</code> सर्च करें और <code>/newbot</code> भेजें।<br>
+          2. BotFather आपको जो <strong>Token</strong> दे, उसे नीचे वाले बॉक्स में पेस्ट करें।<br>
+          3. अपने नए बॉट को खोलकर <code>/start</code> दबाएं।<br>
+          4. Telegram पर <code>@userinfobot</code> से अपनी <strong>Chat ID</strong> निकालें और यहाँ डालें।
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div>
+            <label style="font-size:11px; color:#94a3b8; font-weight:700;">BOT TOKEN:</label>
+            <input type="text" id="tg-token-input" placeholder="e.g. 7891234567:AAHxyz..." style="width:100%; background:#181c26; border:1px solid #334155; padding:8px 10px; border-radius:4px; color:#fff; font-family:monospace; font-size:12px; margin-top:4px;">
+          </div>
+          <div>
+            <label style="font-size:11px; color:#94a3b8; font-weight:700;">CHAT ID:</label>
+            <input type="text" id="tg-chatid-input" placeholder="e.g. 123456789" style="width:100%; background:#181c26; border:1px solid #334155; padding:8px 10px; border-radius:4px; color:#fff; font-family:monospace; font-size:12px; margin-top:4px;">
+          </div>
+          <div style="display:flex; gap:10px; margin-top:8px;">
+            <button class="btn-primary" onclick="saveTelegramConfig()" style="flex:1;">💾 सेव करें (Save)</button>
+            <button class="btn-secondary" onclick="testTelegramAlert()" style="flex:1;">📲 टेस्ट मेसेज भेजें (Test)</button>
+          </div>
+          <div id="tg-status-msg" style="font-size:11px; text-align:center; min-height:16px; margin-top:4px;"></div>
+        </div>
+      </div>
+    </div>
+
   </main>
+
 
   <script src="js/charts.js"></script>
   <script src="js/terminal.js"></script>

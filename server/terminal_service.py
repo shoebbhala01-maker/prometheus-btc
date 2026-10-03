@@ -26,6 +26,7 @@ from engine.spike_radar import spike_radar
 from engine.liquidity_engine import liquidity_engine
 from engine.setup_scoring_engine import setup_scoring_engine
 from engine.risk_governor import risk_governor
+from engine.telegram_alerter import telegram_alerter
 from backtest.paper_trading_engine import paper_trader
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
@@ -333,6 +334,35 @@ class TerminalService:
                     indicator_output=indicators,
                     is_feed_healthy=is_healthy
                 )
+
+                # 8b. Dispatch Telegram Alert if signal triggered (Score >= 75)
+                dec = setup_out.get("decision", "WAIT")
+                if dec in ("LONG SETUP", "SHORT SETUP"):
+                    res_p = closest_res.get("price", mid_p + atr)
+                    sup_p = closest_sup.get("price", mid_p - atr)
+                    if dec == "LONG SETUP":
+                        e_str = f"${min(mid_p - 10, sup_p - 2):.1f} – ${max(mid_p + 5, sup_p + 15):.1f}"
+                        sl_str = f"${sup_p - max(8.0, 0.4 * atr):.1f}"
+                        tp1_str = f"${mid_p + max(40.0, 2.0 * atr):.1f}"
+                        tp2_str = f"${res_p:.1f}"
+                        r_str = f"Strong buyer flow bouncing from support ${sup_p:.1f}"
+                    else:
+                        e_str = f"${min(mid_p - 5, res_p - 15):.1f} – ${max(mid_p + 10, res_p + 2):.1f}"
+                        sl_str = f"${res_p + max(8.0, 0.4 * atr):.1f}"
+                        tp1_str = f"${mid_p - max(40.0, 2.0 * atr):.1f}"
+                        tp2_str = f"${sup_p:.1f}"
+                        r_str = f"Price testing ceiling ${res_p:.1f} in {reg_out.get('regime', 'RANGE')} with fading momentum"
+
+                    telegram_alerter.send_signal_alert(
+                        decision=dec,
+                        spot=mid_p,
+                        score=setup_out.get("final_score", 0.0),
+                        entry=e_str,
+                        sl=sl_str,
+                        tp1=tp1_str,
+                        tp2=tp2_str,
+                        reason=r_str
+                    )
 
                 # 9. Paper Trading Engine
                 paper_summary = paper_trader.evaluate_live_market(
