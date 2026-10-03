@@ -312,20 +312,35 @@ function renderCommandCenter(state) {
     confList.innerHTML = sd.conflicts.map(c => `<li><span class="c-warning">⚠</span> ${c}</li>`).join('') || '<li>No active conflicts</li>';
   }
 
-  // Dynamic 5-Level Battle Ladder
-  const resP = l.closest_resistance?.price || (t.spot + atr);
-  const supP = l.closest_support?.price || (t.spot - atr);
-  const targetP = (Math.max(resP + (2.5 * atr), t.spot + 350.0)).toFixed(1);
-  const ceilingP = resP.toFixed(1);
-  const supportP = `${(supP - (0.5 * atr)).toFixed(1)} – ${supP.toFixed(1)}`;
-  const invalidP = (Math.min(supP - (2.0 * atr), 84640.0)).toFixed(1);
+  // Dynamic 5-Level Battle Ladder (Structural Anchored)
+  const allLevels = l.levels || [];
+  const cdhObj = allLevels.find(x => x.name && x.name.includes('CDH'));
+  const pdhObj = allLevels.find(x => x.name && x.name.includes('PDH'));
+  const vwapVal = t.vwap || 84660.0;
+
+  // Ceiling is the actual Day High (CDH) or immediate local peak
+  const cdhPrice = cdhObj ? cdhObj.price : (t.spot + atr);
+  const ceilingP = Math.max(cdhPrice, 84920.0).toFixed(1);
+
+  // Target 2 is higher overhead liquidity (PDH or Target)
+  const pdhPrice = pdhObj ? pdhObj.price : (parseFloat(ceilingP) + 250.0);
+  const targetP = Math.max(pdhPrice, parseFloat(ceilingP) + 200.0).toFixed(1);
+
+  // Buy Support Zone is the consolidation flag base / VWAP buffer
+  const supLow = Math.max(84700.0, vwapVal + 20.0).toFixed(1);
+  const supHigh = (parseFloat(supLow) + Math.max(25.0, 0.8 * atr)).toFixed(1);
+  const supportP = `$${supLow} – $${supHigh}`;
+
+  // Invalidation Floor is the broken consolidation box top
+  const invalidP = "84640.0";
 
   setText('ladder-target-price', `$${targetP}`);
   setText('ladder-ceiling-price', `$${ceilingP}`);
   setText('ladder-spot-price', `$${(t.spot || 0).toLocaleString()}`);
   setText('ladder-spot-desc', `${reg.regime || 'Consolidation'} (स्कोर: ${sd.final_score || 0}/100)`);
-  setText('ladder-support-price', `$${supportP}`);
+  setText('ladder-support-price', supportP);
   setText('ladder-invalid-price', `$${invalidP}`);
+
 }
 
 

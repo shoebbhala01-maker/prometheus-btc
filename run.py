@@ -18,16 +18,11 @@ def open_browser():
         pass
 
 if __name__ == "__main__":
-    print("""
-    ╔══════════════════════════════════════════════════════════════╗
-    ║   ⚡ PROMETHEUS BTC TERMINAL v3.0                            ║
-    ║   Delta Exchange India — High-Conviction Analysis Engine     ║
-    ║                                                              ║
-    ║   Markets: BTCUSD Perpetual Futures & Dynamic Options        ║
-    ║   Server: http://127.0.0.1:5000                              ║
-    ║   Press Ctrl+C to stop                                       ║
-    ╚══════════════════════════════════════════════════════════════╝
-    """)
+    print("==============================================================")
+    print("   PROMETHEUS BTC TERMINAL v3.0 (Delta Exchange India)")
+    print("   Server: http://127.0.0.1:5000")
+    print("   Markets: BTCUSD Perpetual Futures & Dynamic Options")
+    print("==============================================================")
 
     threading.Thread(target=open_browser, daemon=True).start()
 
