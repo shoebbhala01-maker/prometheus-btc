@@ -268,9 +268,9 @@ class SetupScoringEngine:
         decision = DecisionState.NO_TRADE.value
         trade_dir = "NONE"
 
-        is_trend_up = regime in (MarketRegime.TREND_UP.value, MarketRegime.BREAKOUT_BULL.value)
-        is_trend_down = regime in (MarketRegime.TREND_DOWN.value, MarketRegime.BREAKDOWN_BEAR.value)
-        is_safe_regime = regime not in (MarketRegime.TRANSITION.value, MarketRegime.HIGH_VOLATILITY_RANGE.value, MarketRegime.CHOP.value, "INSUFFICIENT_DATA")
+        is_trend_up = (regime == MarketRegime.TREND_UP.value)
+        is_trend_down = (regime == MarketRegime.TREND_DOWN.value)
+        is_safe_regime = regime not in (MarketRegime.TRANSITION.value, MarketRegime.HIGH_VOLATILITY.value, MarketRegime.INSUFFICIENT_DATA.value)
 
         if regime_output.get("is_counter_trend", False) and final_score >= 65.0:
             decision = DecisionState.COUNTER_TREND_WARNING.value

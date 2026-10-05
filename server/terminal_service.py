@@ -166,16 +166,21 @@ class TerminalService:
             health_watchdog.record_exception("REST_RESYNC", str(e))
 
     def _background_loop(self):
-        """Runs periodic state synthesis every 1 second and REST reconciliation every 30s."""
+        """Runs periodic state synthesis every 1 second and REST reconciliation asynchronously."""
         last_reconcile = 0.0
         while self.is_running:
-            time.sleep(1.0)
-            now = time.time()
-            if now - last_reconcile > 30.0:
-                self.resync_market_data()
-                last_reconcile = now
+            try:
+                time.sleep(1.0)
+                now = time.time()
+                # Run resync in a separate thread so network delays NEVER block state synthesis
+                if now - last_reconcile > 30.0:
+                    last_reconcile = now
+                    threading.Thread(target=self.resync_market_data, daemon=True).start()
 
-            self._compute_and_update_state()
+                self._compute_and_update_state()
+            except Exception as e:
+                health_watchdog.record_exception("BACKGROUND_LOOP", str(e))
+                time.sleep(1.0)
 
     def _broadcast_tick(self):
         if not self.latest_state or not self.broadcast_cbs:
@@ -190,26 +195,26 @@ class TerminalService:
     def _on_price_tick(self, spot: float, bid: float = 0.0, ask: float = 0.0):
         if spot <= 0:
             return
+        self.last_price_update = time.time()
         now_dt_utc = datetime.now(timezone.utc)
         now_dt_ist = now_dt_utc.astimezone(IST)
 
-        with self._lock:
-            if not self.latest_state or "telemetry" not in self.latest_state:
-                return
+        if not self.latest_state or "telemetry" not in self.latest_state:
+            return
 
-            t = self.latest_state["telemetry"]
-            t["spot"] = round(spot, 1)
-            if bid > 0:
-                t["best_bid"] = round(bid, 1)
-            if ask > 0:
-                t["best_ask"] = round(ask, 1)
-            
-            if t["best_bid"] > 0 and t["best_ask"] > 0:
-                t["spread"] = round(max(0.0, t["best_ask"] - t["best_bid"]), 1)
-                t["spread_bps"] = round((t["spread"] / spot) * 10000.0, 2)
+        t = self.latest_state["telemetry"]
+        t["spot"] = round(spot, 1)
+        if bid > 0:
+            t["best_bid"] = round(bid, 1)
+        if ask > 0:
+            t["best_ask"] = round(ask, 1)
+        
+        if t["best_bid"] > 0 and t["best_ask"] > 0:
+            t["spread"] = round(max(0.0, t["best_ask"] - t["best_bid"]), 1)
+            t["spread_bps"] = round((t["spread"] / spot) * 10000.0, 2)
 
-            self.latest_state["timestamp"] = now_dt_utc.isoformat()
-            self.latest_state["timestamp_ist"] = now_dt_ist.strftime("%d-%b-%Y %H:%M:%S IST")
+        self.latest_state["timestamp"] = now_dt_utc.isoformat()
+        self.latest_state["timestamp_ist"] = now_dt_ist.strftime("%d-%b-%Y %H:%M:%S IST")
 
         self._broadcast_tick()
 
@@ -270,8 +275,7 @@ class TerminalService:
             pass
 
     def _compute_and_update_state(self):
-        with self._lock:
-            try:
+        try:
                 # 1. Pull latest market telemetry
                 perp_info = product_discovery.perp_contract or {"symbol": config.default_perp_symbol}
                 book = orderflow_engine.current_orderbook
@@ -459,8 +463,8 @@ class TerminalService:
                     "recent_candles": candle_builder.get_display_candles("5m", 60)
                 }
 
-            except Exception as e:
-                health_watchdog.record_exception("STATE_COMPUTATION", str(e))
+        except Exception as e:
+            health_watchdog.record_exception("STATE_COMPUTATION", str(e))
 
     def _poll_fallback_price(self):
         """Runs in separate background thread: ensures live BTC spot is always fresh even if Delta WS drops."""
@@ -511,6 +515,10 @@ class TerminalService:
                         self.live_best_ask = round(p + 0.5, 1)
                     health_watchdog.record_feed_update("TICKER", is_success=True)
                     self._on_price_tick(self.live_spot, self.live_best_bid, self.live_best_ask)
+                    try:
+                        self._compute_and_update_state()
+                    except Exception:
+                        pass
             except Exception:
                 pass
             time.sleep(2.0)
