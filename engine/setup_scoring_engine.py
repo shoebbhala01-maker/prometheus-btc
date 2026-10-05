@@ -271,12 +271,12 @@ class SetupScoringEngine:
             trade_dir = "BUY" if direction_bias > 0 else "SELL"
             self.current_decision = decision
             self.current_direction = trade_dir
-        elif final_score >= 75.0 and direction_bias > 0.5:
+        elif final_score >= 75.0 and (direction_bias >= 0.3 or regime == MarketRegime.TREND_UP.value):
             decision = DecisionState.LONG_SETUP.value
             trade_dir = "BUY"
             self.current_decision = decision
             self.current_direction = trade_dir
-        elif final_score >= 75.0 and direction_bias < -0.5:
+        elif final_score >= 75.0 and (direction_bias <= -0.3 or regime == MarketRegime.TREND_DOWN.value):
             decision = DecisionState.SHORT_SETUP.value
             trade_dir = "SELL"
             self.current_decision = decision
