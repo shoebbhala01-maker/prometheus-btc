@@ -51,7 +51,20 @@ class CandleBuilder:
 
     def on_1m_candle(self, c_1m: Dict[str, Any]):
         """Processes incoming 1-minute candle and rolls into multi-timeframe aggregations."""
-        t = int(c_1m.get("time", 0))
+        if not c_1m:
+            return
+        if "candle" in c_1m and isinstance(c_1m["candle"], dict):
+            c_1m = c_1m["candle"]
+
+        raw_t = c_1m.get("time") or c_1m.get("t") or c_1m.get("timestamp")
+        t = int(raw_t) if raw_t else int(time.time())
+        if t > 1e14:
+            t = int(t / 1e6)
+        elif t > 1e11:
+            t = int(t / 1e3)
+        if t <= 0:
+            t = int(time.time())
+
         o = float(c_1m.get("open", 0.0))
         h = float(c_1m.get("high", 0.0))
         l = float(c_1m.get("low", 0.0))
@@ -125,13 +138,16 @@ class CandleBuilder:
 
     def get_display_candles(self, tf: str = "5m", count: int = 100) -> List[Dict[str, Any]]:
         """Returns candles with timestamps formatted in IST and UTC for UI charts."""
-        candles = list(self.candles.get(tf, []))
-        if self.active_candle.get(tf):
+        candles = [c for c in self.candles.get(tf, []) if c.get("time", 0) > 0]
+        if self.active_candle.get(tf) and self.active_candle[tf].get("time", 0) > 0:
             candles.append(self.active_candle[tf])
 
         res = []
         for c in candles[-count:]:
-            dt_utc = datetime.fromtimestamp(c["time"], tz=timezone.utc)
+            t_sec = int(c.get("time", 0))
+            if t_sec <= 0:
+                continue
+            dt_utc = datetime.fromtimestamp(t_sec, tz=timezone.utc)
             dt_ist = dt_utc.astimezone(IST)
             res.append({
                 **c,
