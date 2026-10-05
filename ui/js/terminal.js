@@ -66,20 +66,25 @@ function initSocket() {
     console.warn('Socket.IO init fallback to polling', e);
   }
 
-  // High-frequency polling every 400ms ensures sub-second tick-by-tick updates
+  // Smooth polling with concurrency guard ensures reliable updates without server flooding
+  let isFetchingState = false;
   setInterval(() => {
+    if (isFetchingState) return;
+    isFetchingState = true;
     fetch('/api/state')
       .then(res => res.json())
       .then(data => {
+        isFetchingState = false;
         if (data && Object.keys(data).length > 0) {
           updateConnStatus(true);
           renderState(data);
         }
       })
       .catch(err => {
+        isFetchingState = false;
         updateConnStatus(false);
       });
-  }, 400);
+  }, 1000);
 }
 
 function initLiveClock() {

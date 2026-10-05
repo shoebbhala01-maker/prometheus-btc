@@ -117,12 +117,17 @@ class DeltaWebSocketManager:
             msg_type = msg.get("type")
             t_now = time.time()
 
-            if msg_type == "v2/ticker" or msg_type == "ticker":
+            if msg_type in ("l2_orderbook", "l2_updates") or ("buy" in msg and "sell" in msg):
+                health_watchdog.record_feed_update("ORDERBOOK", is_success=True)
+                for cb in self.orderbook_callbacks:
+                    cb(msg)
+
+            elif msg_type in ("v2/ticker", "ticker") or ("symbol" in msg and "quotes" in msg) or ("close" in msg and "mark_price" in msg):
                 health_watchdog.record_feed_update("TICKER", is_success=True)
                 for cb in self.ticker_callbacks:
                     cb(msg)
 
-            elif msg_type == "all_trades" or msg_type == "trades" or msg_type == "all_trades_snapshot":
+            elif msg_type in ("all_trades", "trades", "all_trades_snapshot") or ("trades" in msg):
                 health_watchdog.record_feed_update("TRADES", is_success=True)
                 trades = msg.get("trades", [])
                 if not trades and "p" in msg:
@@ -138,12 +143,7 @@ class DeltaWebSocketManager:
                     for cb in self.trade_callbacks:
                         cb(trades)
 
-            elif msg_type == "l2_orderbook" or msg_type == "l2_updates":
-                health_watchdog.record_feed_update("ORDERBOOK", is_success=True)
-                for cb in self.orderbook_callbacks:
-                    cb(msg)
-
-            elif msg_type == "candlestick_1m":
+            elif msg_type == "candlestick_1m" or ("candle" in msg):
                 health_watchdog.record_feed_update("CANDLES", is_success=True)
                 for cb in self.candle_callbacks:
                     cb(msg)
