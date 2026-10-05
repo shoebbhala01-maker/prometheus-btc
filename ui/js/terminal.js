@@ -221,14 +221,18 @@ function renderCommandCenter(state) {
   const desiDanger = document.getElementById('desi-danger-text');
 
   if (desiBadge) {
-    if (sd.decision === 'SHORT SETUP') {
+    const isScoreQualified = (sd.final_score || 0) >= 75;
+    const isSafeRegime = !['TRANSITION', 'HIGH_VOLATILITY_RANGE', 'CHOP', 'INSUFFICIENT_DATA'].includes(reg.regime);
+
+    if (sd.decision === 'SHORT SETUP' && isScoreQualified && isSafeRegime) {
       desiBadge.textContent = '🔴 SHORT (SELL) KARO — BECHO!';
       desiBadge.className = 'desi-action-huge action-sell';
 
-      const entryLow = Math.min(t.spot - 5, resPrice - 15).toFixed(1);
-      const entryHigh = Math.max(t.spot + 10, resPrice + 2).toFixed(1);
-      const slLevel = (resPrice + Math.max(8.0, 0.4 * atr)).toFixed(1);
-      const tp1Level = (t.spot - Math.max(40.0, 2.0 * atr)).toFixed(1);
+      const entryLow = (t.spot - Math.min(10.0, 0.2 * atr)).toFixed(1);
+      const entryHigh = (t.spot + Math.min(15.0, 0.3 * atr)).toFixed(1);
+      const maxRisk = Math.max(25.0, Math.min(50.0, 0.75 * atr));
+      const slLevel = (t.spot + maxRisk).toFixed(1);
+      const tp1Level = (t.spot - Math.max(40.0, 1.5 * atr)).toFixed(1);
       const tp2Level = supPrice.toFixed(1);
 
       if (desiEntry) desiEntry.textContent = `$${entryLow} – $${entryHigh}`;
@@ -237,19 +241,20 @@ function renderCommandCenter(state) {
       if (desiTp2) desiTp2.textContent = `$${tp2Level}`;
 
       if (desiReason) {
-        desiReason.innerHTML = `<strong>💡 देसी भाषा में वजह (Reason):</strong> मार्केट अभी <strong>'${reg.regime || 'RANGE'}'</strong> में है। प्राइस ऊपर की छत (<strong>${resName} $${resPrice.toFixed(1)}</strong>) से टकराकर रुक रहा है और बायर्स में जोर नहीं है। रेंज मार्केट का नियम है <em>'ऊपर बेचो, नीचे खरीदो'</em>। इसलिए यहाँ से नीचे गिरने की संभावना <strong>${sd.final_score || 81}%</strong> है।`;
+        desiReason.innerHTML = `<strong>💡 देसी भाषा में वजह (Reason):</strong> मार्केट डाउनट्रेंड/ब्रेकडाउन में है और सेलर्स हावी हैं। सेटअप स्कोर <strong>${sd.final_score}%</strong> है। स्टॉप लॉस सिर्फ $${(slLevel - t.spot).toFixed(1)} पॉइंट्स रखा गया है।`;
       }
       if (desiDanger) {
-        desiDanger.innerHTML = `<strong>🚨 ट्रेड कब फेल माना जाएगा? (Cancel Rule):</strong> अगर कोई भी 5-मिनट की कैंडल <strong>$${slLevel} के ऊपर जाकर बंद (Close)</strong> हो जाए, तो मतलब बायर्स जीत गए। उस समय ज़बरदस्ती होल्ड न करें, तुरंत ट्रेड से बाहर आ जाएं।`;
+        desiDanger.innerHTML = `<strong>🚨 ट्रेड कब फेल माना जाएगा? (Cancel Rule):</strong> अगर कोई भी 5-मिनट की कैंडल <strong>$${slLevel} के ऊपर जाकर बंद (Close)</strong> हो जाए, तो तुरंत ट्रेड से बाहर आ जाएं।`;
       }
-    } else if (sd.decision === 'LONG SETUP') {
+    } else if (sd.decision === 'LONG SETUP' && isScoreQualified && isSafeRegime) {
       desiBadge.textContent = '🟢 LONG (BUY) KARO — KHAREEDO!';
       desiBadge.className = 'desi-action-huge action-buy';
 
-      const entryLow = Math.min(t.spot - 10, supPrice - 2).toFixed(1);
-      const entryHigh = Math.max(t.spot + 5, supPrice + 15).toFixed(1);
-      const slLevel = (supPrice - Math.max(8.0, 0.4 * atr)).toFixed(1);
-      const tp1Level = (t.spot + Math.max(40.0, 2.0 * atr)).toFixed(1);
+      const entryLow = (t.spot - Math.min(15.0, 0.3 * atr)).toFixed(1);
+      const entryHigh = (t.spot + Math.min(10.0, 0.2 * atr)).toFixed(1);
+      const maxRisk = Math.max(25.0, Math.min(50.0, 0.75 * atr));
+      const slLevel = (t.spot - maxRisk).toFixed(1);
+      const tp1Level = (t.spot + Math.max(40.0, 1.5 * atr)).toFixed(1);
       const tp2Level = resPrice.toFixed(1);
 
       if (desiEntry) desiEntry.textContent = `$${entryLow} – $${entryHigh}`;
@@ -258,7 +263,7 @@ function renderCommandCenter(state) {
       if (desiTp2) desiTp2.textContent = `$${tp2Level}`;
 
       if (desiReason) {
-        desiReason.innerHTML = `<strong>💡 देसी भाषा में वजह (Reason):</strong> मार्केट में बायर्स का भारी फ्लो आया है। प्राइस सपोर्ट (<strong>${supName} $${supPrice.toFixed(1)}</strong>) से ऊपर बाउंस कर रहा है और मोमेंटम ऊपर की तरफ है। यहाँ से ऊपर जाने की संभावना <strong>${sd.final_score || 80}%</strong> है।`;
+        desiReason.innerHTML = `<strong>💡 देसी भाषा में वजह (Reason):</strong> मार्केट अपट्रेंड/ब्रेकआउट में है और बायर्स का कन्फर्म फ्लो है। सेटअप स्कोर <strong>${sd.final_score}%</strong> है। टाइट रिस्क ($${(t.spot - slLevel).toFixed(1)} SL) के साथ ट्रेड एक्टिव है।`;
       }
       if (desiDanger) {
         desiDanger.innerHTML = `<strong>🚨 ट्रेड कब फेल माना जाएगा? (Cancel Rule):</strong> अगर कोई भी 5-मिनट की कैंडल <strong>$${slLevel} के नीचे जाकर बंद (Close)</strong> हो जाए, तो तुरंत बाहर निकल जाएं!`;
@@ -267,16 +272,18 @@ function renderCommandCenter(state) {
       desiBadge.textContent = '🟡 RUKO — ABHI KUCH MAT KARO (WAIT)';
       desiBadge.className = 'desi-action-huge action-wait';
 
-      if (desiEntry) desiEntry.textContent = 'Wait for Level (कोई ट्रेड नहीं)';
+      if (desiEntry) desiEntry.textContent = 'Wait for Setup (कोई ट्रेड नहीं)';
       if (desiSl) desiSl.textContent = '--';
       if (desiTp1) desiTp1.textContent = '--';
       if (desiTp2) desiTp2.textContent = '--';
 
+      const regTxt = reg.regime || 'WAIT';
+      const scoreTxt = sd.final_score || 0;
       if (desiReason) {
-        desiReason.innerHTML = `<strong>💡 देसी भाषा में वजह (Reason):</strong> अभी मार्केट बीच में फंसा हुआ है या कोई साफ दिशा नहीं बनी है (स्कोर ${sd.final_score || 0}/100)। बीच में कूदने से लॉस होता है। जब तक प्राइस छत ($${resPrice.toFixed(1)}) या ज़मीन ($${supPrice.toFixed(1)}) के पास नहीं आता, शांति से बैठे रहें।`;
+        desiReason.innerHTML = `<strong>💡 देसी भाषा में वजह (Reason):</strong> मार्केट अभी <strong>${regTxt}</strong> में है और स्कोर <strong>${scoreTxt}/100</strong> है। कोई क्लियर डायरेक्शन नहीं है या रिस्क ज्यादा है। जब तक स्कोर 75+ और ट्रेंड कंफर्म न हो, पैसा बचाकर रखें।`;
       }
       if (desiDanger) {
-        desiDanger.innerHTML = `<strong>🚨 सुरक्षा नियम:</strong> जब सेटअप स्कोर 75+ होगा तब यहाँ अपने आप BUY या SELL का बड़ा अलार्म चमकेगा और आवाज़ आएगी।`;
+        desiDanger.innerHTML = `<strong>🚨 सुरक्षा नियम:</strong> फॉल्स ब्रेकआउट या चॉप में ट्रैप होने से बचने के लिए सिर्फ 75+ स्कोर और ट्रेंड कन्फर्मेशन पर ही एक्शन लिया जाएगा।`;
       }
     }
   }

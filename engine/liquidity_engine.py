@@ -80,6 +80,16 @@ class LiquidityEngine:
         for idx, eql in enumerate(eql_list):
             levels.append(make_level(f"Equal Lows (EQL #{idx+1})", eql, "SUPPORT", "INFERRED_ZONE"))
 
+        # 5b. Local Intraday Swing High and Swing Low (Crucial for tight realistic SL & triggers)
+        recent_c = candles_1m[-45:] if len(candles_1m) >= 45 else candles_1m
+        if len(recent_c) >= 5:
+            local_high = max(c["high"] for c in recent_c)
+            local_low = min(c["low"] for c in recent_c)
+            if local_high > spot_price:
+                levels.append(make_level("Local Range Resistance", local_high, "RESISTANCE", "OBSERVED"))
+            if local_low < spot_price:
+                levels.append(make_level("Local Range Support", local_low, "SUPPORT", "OBSERVED"))
+
         # Sort by price descending
         levels.sort(key=lambda x: x["price"], reverse=True)
 
