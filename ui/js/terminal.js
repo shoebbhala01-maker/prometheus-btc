@@ -176,25 +176,27 @@ function renderState(state) {
   }
 
   // TAB 1: Command Center
-  renderCommandCenter(state);
+  try { renderCommandCenter(state); } catch (e) { console.error('Error in renderCommandCenter:', e); }
 
   // TAB 2: Futures Engine
-  renderFuturesEngine(state);
+  try { renderFuturesEngine(state); } catch (e) { console.error('Error in renderFuturesEngine:', e); }
 
   // TAB 4: Breakout & Breakdown
-  renderBreakout(b, t);
+  try { renderBreakout(b, t); } catch (e) { console.error('Error in renderBreakout:', e); }
 
   // TAB 5: Spike/Reversal Radar
-  renderSpikeRadar(s, t);
+  try { renderSpikeRadar(s, t); } catch (e) { console.error('Error in renderSpikeRadar:', e); }
 
   // TAB 6: Liquidity & Order Flow
-  renderLiquidity(l, t, state);
+  try { renderLiquidity(l, t, state); } catch (e) { console.error('Error in renderLiquidity:', e); }
 
   // TAB 7: Paper Trading
-  renderPaperTrading(p);
+  try { renderPaperTrading(p); } catch (e) { console.error('Error in renderPaperTrading:', e); }
 
   // TAB 9: Data Quality & Audit
-  renderHealthAudit(h, state);
+  try { renderHealthAudit(h, state); } catch (e) { console.error('Error in renderHealthAudit:', e); }
+}
+
 // ==========================================
 // ⚔️ PROMETHEUS BTC: LIVE MARKET BATTLE ENGINE RENDERER
 // ==========================================
