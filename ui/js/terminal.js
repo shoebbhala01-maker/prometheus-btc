@@ -195,9 +195,175 @@ function renderState(state) {
 
   // TAB 9: Data Quality & Audit
   renderHealthAudit(h, state);
+// ==========================================
+// ⚔️ PROMETHEUS BTC: LIVE MARKET BATTLE ENGINE RENDERER
+// ==========================================
+function renderMarketBattle(mb) {
+  if (!mb) return;
+
+  // Header State
+  const stateBadge = document.getElementById('be-state-badge');
+  if (stateBadge) {
+    stateBadge.textContent = `⚔️ ${mb.battle_state || 'BALANCED'}`;
+    const bs = mb.battle_state || '';
+    if (bs.includes('BUYERS') || bs.includes('SHORT SQUEEZE')) {
+      stateBadge.style.background = 'rgba(16, 185, 129, 0.15)';
+      stateBadge.style.color = '#10b981';
+      stateBadge.style.borderColor = 'rgba(16, 185, 129, 0.35)';
+    } else if (bs.includes('SELLERS') || bs.includes('LONG SQUEEZE') || bs.includes('TRAP')) {
+      stateBadge.style.background = 'rgba(239, 68, 68, 0.15)';
+      stateBadge.style.color = '#ef4444';
+      stateBadge.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+    } else {
+      stateBadge.style.background = 'rgba(56, 189, 248, 0.15)';
+      stateBadge.style.color = '#38bdf8';
+      stateBadge.style.borderColor = 'rgba(56, 189, 248, 0.35)';
+    }
+  }
+
+  if (mb.clock_phase) {
+    setText('be-clock-tag', mb.clock_phase.phase_name || '--');
+  }
+
+  if (mb.pressure_change) {
+    setText('be-momentum-tag', mb.pressure_change.momentum_label || 'BALANCED / STEADY ⚖️');
+  }
+
+  // Box 13: "WHO IS WINNING?"
+  if (mb.who_is_winning) {
+    const ww = mb.who_is_winning;
+    setText('be-buyer-score', Math.round(ww.buyers_score || 0));
+    setText('be-seller-score', Math.round(ww.sellers_score || 0));
+    const bBar = document.getElementById('be-buyer-bar');
+    if (bBar) bBar.style.width = `${Math.min(100, Math.max(5, ww.buyers_score))}%`;
+    const sBar = document.getElementById('be-seller-bar');
+    if (sBar) sBar.style.width = `${Math.min(100, Math.max(5, ww.sellers_score))}%`;
+
+    const net = (mb.battle_score?.net_pressure !== undefined) ? mb.battle_score.net_pressure : (ww.buyers_score - ww.sellers_score);
+    setText('be-net-tag', `${net >= 0 ? '+' : ''}${Math.round(net)} NET`);
+    setText('be-winner-txt', ww.winner || 'TIED');
+    setText('be-status-line', ww.desi_status || ww.status_line || '--');
+    setText('be-res-frontier', `$${Math.round(ww.key_resistance || 0).toLocaleString()}`);
+    setText('be-sup-frontier', `$${Math.round(ww.key_support || 0).toLocaleString()}`);
+  }
+
+  // Box 16: "NEXT DECISIVE EVENT"
+  if (mb.next_decisive_event) {
+    const ne = mb.next_decisive_event;
+    setText('be-next-event-text', ne.waiting_for || '--');
+    setText('be-next-event-desi', ne.desi_explanation || '--');
+    setText('be-next-event-inval', ne.invalidation_rule || '--');
+  }
+
+  // Box 18: "30-SECOND MARKET READ"
+  if (mb.thirty_second_read) {
+    const cp = mb.thirty_second_read;
+    setText('be-cp-price', cp.price || '--');
+    const d30Buy = mb.pressure_change?.deltas?.['30s']?.buy || 0;
+    const d30Sell = mb.pressure_change?.deltas?.['30s']?.sell || 0;
+    setText('be-cp-buy', `${cp.buy_pressure || '--'} (${d30Buy >= 0 ? '+' : ''}${Math.round(d30Buy)})`);
+    setText('be-cp-sell', `${cp.sell_pressure || '--'} (${d30Sell >= 0 ? '+' : ''}${Math.round(d30Sell)})`);
+    setText('be-cp-fund', cp.funding_rate || '--');
+    setText('be-cp-cvd', cp.cvd || '--');
+    setText('be-cp-vol', cp.volume || '--');
+    setText('be-cp-win', cp.current_winner || '--');
+    setText('be-cp-lvl', cp.next_level || '--');
+    setText('be-cp-action', cp.action || 'WAIT');
+  }
+
+  // Box 14: WHERE CAN BUYERS TAKE IT?
+  if (mb.buyers_route && mb.buyers_route.length > 0) {
+    const bHtml = mb.buyers_route.map(r => `
+      <div class="be-route-item">
+        <span class="be-route-price">$${Number(r.price).toLocaleString()}</span>
+        <span class="be-route-dist">${r.label} (${r.distance || '--'})</span>
+        <span class="be-route-def">${r.seller_defense_strength ? 'Def: ' + r.seller_defense_strength : r.seller_defense || ''}</span>
+      </div>
+    `).join('');
+    const el = document.getElementById('be-buyers-route-list');
+    if (el) el.innerHTML = bHtml;
+  }
+
+  // Box 15: WHERE CAN SELLERS PUSH IT?
+  if (mb.sellers_route && mb.sellers_route.length > 0) {
+    const sHtml = mb.sellers_route.map(r => `
+      <div class="be-route-item route-bear">
+        <span class="be-route-price">$${Number(r.price).toLocaleString()}</span>
+        <span class="be-route-dist">${r.label} (${r.distance || '--'})</span>
+        <span class="be-route-def">${r.buyer_support_strength ? 'Sup: ' + r.buyer_support_strength : r.buyer_support || ''}</span>
+      </div>
+    `).join('');
+    const el = document.getElementById('be-sellers-route-list');
+    if (el) el.innerHTML = sHtml;
+  }
+
+  // Participant Layers & Absorption
+  if (mb.participant_layers) {
+    const inst = mb.participant_layers.institutional || {};
+    const crowd = mb.participant_layers.inferred_crowd_pressure || {};
+    setText('be-inst-val', `${inst.whale_stance || '--'} (L/S: ${inst.top_traders_ls_ratio || 1.0})`);
+    setText('be-inst-sub', `Funding 8h: ${inst.funding_rate_8h_pct || 0}% • ${inst.funding_sentiment || ''}`);
+    setText('be-crowd-val', `${crowd.crowd_bias || '--'} • ${crowd.crowd_direction || ''}`);
+  }
+
+  const divBanner = document.getElementById('be-divergence-banner');
+  if (divBanner) {
+    if (mb.divergence && mb.divergence.is_divergent) {
+      divBanner.style.display = 'block';
+      setText('be-divergence-text', `${mb.divergence.headline}: ${mb.divergence.guidance || ''}`);
+    } else {
+      divBanner.style.display = 'none';
+    }
+  }
+
+  const absBanner = document.getElementById('be-absorption-banner');
+  if (absBanner) {
+    if (mb.absorption && mb.absorption.is_detected) {
+      absBanner.style.display = 'block';
+      setText('be-absorption-text', `🛡️ ${mb.absorption.side} ABSORPTION @ $${Math.round(mb.absorption.level).toLocaleString()}: ${mb.absorption.explanation || ''}`);
+    } else {
+      absBanner.style.display = 'none';
+    }
+  }
+
+  // Box 9: 3 Parallel Conditional Scenarios
+  if (mb.scenarios && mb.scenarios.length > 0) {
+    const scHtml = mb.scenarios.map(sc => `
+      <div class="be-scenario-card ${sc.is_active ? 'active-scenario' : ''}">
+        <div class="be-sc-hdr">
+          <span>${sc.name}</span>
+          <span class="be-sc-conf">${sc.confidence_label} (${Math.round(sc.confidence_score)}%)</span>
+        </div>
+        <div class="be-sc-trig">⚡ <strong>Trigger:</strong> ${sc.trigger}</div>
+        <div class="be-sc-tgt">🎯 <strong>Target:</strong> ${sc.target}</div>
+        <div class="be-sc-inval">❌ <strong>Invalidation:</strong> ${sc.invalidation}</div>
+        <div class="be-sc-evid">🔍 <strong>Evidence:</strong> ${sc.evidence_required}</div>
+      </div>
+    `).join('');
+    const el = document.getElementById('be-scenarios-grid');
+    if (el) el.innerHTML = scHtml;
+  }
+
+  // Box 22: Desi Q&A
+  if (mb.desi_answers) {
+    const da = mb.desi_answers;
+    setText('be-q1', da.abhi_kya_ho_raha_hai || '--');
+    setText('be-q2', da.kaun_jeet_raha_hai || '--');
+    setText('be-q3', da.buyers_gaining_losing || '--');
+    setText('be-q4', da.sellers_gaining_losing || '--');
+    setText('be-q5', da.buyers_ka_agala_level || '--');
+    setText('be-q6', da.sellers_ka_defence_kahan || '--');
+    setText('be-q7', da.agar_rejection_hua_to_kahan_tak || '--');
+    setText('be-q8', da.kya_invalidation_hai || '--');
+    setText('be-q9', da.abhi_trade_ya_wait || 'WAIT');
+  }
 }
 
 function renderCommandCenter(state) {
+  if (state.market_battle) {
+    renderMarketBattle(state.market_battle);
+  }
+
   const sd = state.setup_decision || {};
   const reg = state.regime || {};
   const t = state.telemetry || {};

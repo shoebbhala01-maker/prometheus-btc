@@ -27,6 +27,7 @@ from engine.liquidity_engine import liquidity_engine
 from engine.setup_scoring_engine import setup_scoring_engine
 from engine.risk_governor import risk_governor
 from engine.telegram_alerter import telegram_alerter
+from engine.market_battle_engine import btc_market_battle_engine
 from backtest.paper_trading_engine import paper_trader
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
@@ -90,6 +91,23 @@ class TerminalService:
             "setup_decision": {"decision": "WAIT", "final_score": 50.0, "conviction": "NEUTRAL", "reasons": ["Bootstrapping live feeds"]},
             "paper_trading": {"active_trades": [], "daily_pnl_usd": 0.0, "account_equity": 10000.0, "trades_today": 0},
             "health": {"overall_status": "HEALTHY", "is_circuit_broken": False},
+            "market_battle": btc_market_battle_engine.evaluate_battle(
+                spot=self.live_spot,
+                vwap=self.live_spot,
+                mark_price=self.live_spot,
+                funding_rate=0.0001,
+                cvd=0.0,
+                orderbook_imbalance=0.0,
+                rvol=1.0,
+                day_high=self.live_spot + 250.0,
+                day_low=self.live_spot - 250.0,
+                range_high=self.live_spot + 150.0,
+                range_low=self.live_spot - 150.0,
+                closest_support=self.live_spot - 150.0,
+                closest_resistance=self.live_spot + 150.0,
+                top_traders_ls_ratio=1.0,
+                is_live=True
+            ),
             "recent_candles": []
         }
 
@@ -422,6 +440,25 @@ class TerminalService:
                     atr=atr
                 )
 
+                # 9B. Live Market Battle Engine (Central Intelligence Layer)
+                battle_out = btc_market_battle_engine.evaluate_battle(
+                    spot=mid_p,
+                    vwap=vwap,
+                    mark_price=mid_p,
+                    funding_rate=float(perp_info.get("funding_rate", 0.0001) or 0.0001),
+                    cvd=float(of_data.get("cvd", 0.0) or 0.0),
+                    orderbook_imbalance=float(of_data.get("imbalance_25bps", 0.0) or 0.0),
+                    rvol=float(indicators.get("rvol", 1.0) or 1.0),
+                    day_high=float(liq.get("day_high", mid_p + 250.0) or mid_p + 250.0),
+                    day_low=float(liq.get("day_low", mid_p - 250.0) or mid_p - 250.0),
+                    range_high=float(liq.get("range_high", mid_p + 150.0) or mid_p + 150.0),
+                    range_low=float(liq.get("range_low", mid_p - 150.0) or mid_p - 150.0),
+                    closest_support=float(closest_sup.get("price", mid_p - 150.0) or mid_p - 150.0),
+                    closest_resistance=float(closest_res.get("price", mid_p + 150.0) or mid_p + 150.0),
+                    top_traders_ls_ratio=1.05,
+                    is_live=True
+                )
+
                 # 10. Format UTC & IST timestamps
                 now_dt_utc = datetime.now(timezone.utc)
                 now_dt_ist = now_dt_utc.astimezone(IST)
@@ -460,6 +497,7 @@ class TerminalService:
                     "setup_decision": setup_out,
                     "paper_trading": paper_summary,
                     "health": health,
+                    "market_battle": battle_out,
                     "recent_candles": candle_builder.get_display_candles("5m", 60)
                 }
 

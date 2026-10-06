@@ -80,6 +80,152 @@
     <!-- ========================================== -->
     <div id="tab-command_center" class="tab-content active">
 
+      <!-- ⚔️ PROMETHEUS BTC: LIVE MARKET BATTLE ENGINE (CENTRAL INTELLIGENCE LAYER) -->
+      <section class="battle-engine-card" id="battle-engine-card">
+        
+        <!-- Header: State & Clock Phase -->
+        <div class="be-header">
+          <div class="be-title-group">
+            <span class="be-state-badge" id="be-state-badge">⚔️ BALANCED BATTLE</span>
+            <span class="be-title">⚔️ LIVE MARKET BATTLE ENGINE (BTC/USD)</span>
+            <span class="be-clock-tag" id="be-clock-tag">SESSION CLOCK: --</span>
+          </div>
+          <div class="be-momentum-tag" id="be-momentum-tag">BALANCED / STEADY ⚖️</div>
+        </div>
+
+        <!-- Row 1: Who is Winning (Req 13) | Next Decisive Event (Req 16) | 30-Second Read (Req 18) -->
+        <div class="be-top-grid">
+          
+          <!-- Box 13: "WHO IS WINNING?" -->
+          <div class="be-card be-winning-box">
+            <div class="be-box-title">👑 WHO IS WINNING?</div>
+            <div class="be-scores-row">
+              <div class="be-score-col">
+                <span class="be-score-lbl">BUYERS</span>
+                <span class="be-score-val c-bull" id="be-buyer-score">--</span>
+                <div class="be-mini-bar-bg"><div class="be-mini-bar-fill c-bull-bg" id="be-buyer-bar" style="width: 50%;"></div></div>
+              </div>
+              <div class="be-vs-col">
+                <span class="be-net-tag" id="be-net-tag">+0 NET</span>
+                <span class="be-winner-txt" id="be-winner-txt">TIED</span>
+              </div>
+              <div class="be-score-col">
+                <span class="be-score-lbl">SELLERS</span>
+                <span class="be-score-val c-bear" id="be-seller-score">--</span>
+                <div class="be-mini-bar-bg"><div class="be-mini-bar-fill c-bear-bg" id="be-seller-bar" style="width: 50%;"></div></div>
+              </div>
+            </div>
+            <div class="be-status-line" id="be-status-line">Analyzing live order flow & funding...</div>
+            <div class="be-frontier-row">
+              <span>Resistance: <strong id="be-res-frontier">--</strong></span>
+              <span>Support: <strong id="be-sup-frontier">--</strong></span>
+            </div>
+          </div>
+
+          <!-- Box 16: "NEXT DECISIVE EVENT" -->
+          <div class="be-card be-event-box">
+            <div class="be-box-title">🎯 NEXT DECISIVE EVENT</div>
+            <div class="be-event-headline" id="be-next-event-text">
+              WAITING FOR KEY LEVEL TRIGGER...
+            </div>
+            <div class="be-event-desi" id="be-next-event-desi">
+              Price action consolidation monitor ho raha hai.
+            </div>
+            <div class="be-event-inval">
+              <span class="be-inval-lbl">INVALIDATION:</span>
+              <span id="be-next-event-inval">--</span>
+            </div>
+          </div>
+
+          <!-- Box 18: "30-SECOND MARKET READ" -->
+          <div class="be-card be-cockpit-box">
+            <div class="be-box-title">⚡ 30-SECOND MARKET READ</div>
+            <div class="be-cockpit-grid">
+              <div class="be-pill"><span class="pk">PRICE</span><span class="pv" id="be-cp-price">--</span></div>
+              <div class="be-pill"><span class="pk">BUY PRES</span><span class="pv" id="be-cp-buy">--</span></div>
+              <div class="be-pill"><span class="pk">SELL PRES</span><span class="pv" id="be-cp-sell">--</span></div>
+              <div class="be-pill"><span class="pk">FUNDING</span><span class="pv" id="be-cp-fund">--</span></div>
+              <div class="be-pill"><span class="pk">CVD FLOW</span><span class="pv" id="be-cp-cvd">--</span></div>
+              <div class="be-pill"><span class="pk">VOLUME</span><span class="pv" id="be-cp-vol">--</span></div>
+              <div class="be-pill"><span class="pk">WINNER</span><span class="pv" id="be-cp-win">--</span></div>
+              <div class="be-pill"><span class="pk">KEY LEVEL</span><span class="pv" id="be-cp-lvl">--</span></div>
+              <div class="be-pill be-pill-action"><span class="pk">ACTION</span><span class="pv" id="be-cp-action">WAIT</span></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Row 2: Target Ladders (Req 14 & 15) & Participant Divergence (Req 2, 7, 11) -->
+        <div class="be-mid-grid">
+          
+          <!-- Box 14: WHERE CAN THEY TAKE IT? (Buyers' Route) -->
+          <div class="be-card be-route-box">
+            <div class="be-box-title c-bull">🚀 WHERE CAN BUYERS TAKE IT? (Upside Route)</div>
+            <div class="be-route-list" id="be-buyers-route-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Box 15: WHERE CAN SELLERS PUSH IT? (Sellers' Route) -->
+          <div class="be-card be-route-box">
+            <div class="be-box-title c-bear">🔻 WHERE CAN SELLERS PUSH IT? (Downside Route)</div>
+            <div class="be-route-list" id="be-sellers-route-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Participant & Absorption Radar (Req 2, 7, 11) -->
+          <div class="be-card be-intel-box">
+            <div class="be-box-title">🔬 WHALES, FUNDING & ABSORPTION</div>
+            <div class="be-participant-row">
+              <div class="be-p-block">
+                <span class="be-p-lbl">INSTITUTIONAL & WHALES</span>
+                <span class="be-p-val" id="be-inst-val">--</span>
+                <span class="be-p-sub" id="be-inst-sub">--</span>
+              </div>
+              <div class="be-p-block">
+                <span class="be-p-lbl">INFERRED CROWD PRESSURE</span>
+                <span class="be-p-val" id="be-crowd-val">--</span>
+                <span class="be-p-sub" id="be-crowd-sub">Proxy metric from taker volume, funding skew & liquidations</span>
+              </div>
+            </div>
+            <!-- Divergence & Absorption Banners -->
+            <div class="be-divergence-banner" id="be-divergence-banner" style="display: none;">
+              <span id="be-divergence-text">⚠️ DIVERGENCE DETECTED</span>
+            </div>
+            <div class="be-absorption-banner" id="be-absorption-banner" style="display: none;">
+              <span id="be-absorption-text">🛡️ ABSORPTION ACTIVE</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Row 3: 3 Parallel Conditional Scenarios (Req 9, 10, 19, 20) -->
+        <div class="be-scenarios-container">
+          <div class="be-box-title">📋 3 CONDITIONAL SCENARIOS & EVIDENCE REQUIRED (No Prediction Without Condition)</div>
+          <div class="be-scenarios-grid" id="be-scenarios-grid">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Row 4: Desi Live Q&A "ABHI HAR TICK KA SACH" (Req 22) -->
+        <details class="be-desi-accordion" open>
+          <summary class="be-desi-summary">🗣️ ABHI HAR TICK KA SACH (Real-Time Desi Market Answers)</summary>
+          <div class="be-desi-grid">
+            <div class="be-qna"><span class="be-q">1. Abhi kya ho raha hai?</span><span class="be-a" id="be-q1">--</span></div>
+            <div class="be-qna"><span class="be-q">2. Kaun jeet raha hai?</span><span class="be-a" id="be-q2">--</span></div>
+            <div class="be-qna"><span class="be-q">3. Buyers zor badha rahe ya ghata rahe?</span><span class="be-a" id="be-q3">--</span></div>
+            <div class="be-qna"><span class="be-q">4. Sellers zor badha rahe ya ghata rahe?</span><span class="be-a" id="be-q4">--</span></div>
+            <div class="be-qna"><span class="be-q">5. Buyers ka agla level kya hai?</span><span class="be-a" id="be-q5">--</span></div>
+            <div class="be-qna"><span class="be-q">6. Sellers ka defence kahan hai?</span><span class="be-a" id="be-q6">--</span></div>
+            <div class="be-qna"><span class="be-q">7. Agar rejection hua to kahan tak?</span><span class="be-a" id="be-q7">--</span></div>
+            <div class="be-qna"><span class="be-q">8. Kya invalidation hai?</span><span class="be-a" id="be-q8">--</span></div>
+            <div class="be-qna"><span class="be-q">9. Abhi trade karna hai ya wait?</span><span class="be-a" id="be-q9" style="font-weight: 800; color: #fbbf24;">WAIT</span></div>
+          </div>
+        </details>
+
+      </section>
+
       <!-- 🔥 PROMINENT DESI TRADING DESK (SEEDHA BUY / SELL ACTION) -->
       <section class="desi-desk-container" id="desi-desk-section">
         <div class="desi-desk-header">
